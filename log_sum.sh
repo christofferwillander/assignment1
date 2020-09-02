@@ -23,9 +23,13 @@ test -f $fileName
 
 # Checking return value of test function
 if [ $? -eq 1 ]; then
-	echo "ERROR: File $fileName does not exist"
-	exit 1
+        echo "ERROR: File $fileName does not exist"
+        exit 1
 fi
+
+# Cleaning up in the parameter array
+unset params[$(($#-1))]
+params=("${params[@]}")
 
 # Checking whether -n flag is used
 printf "%s" $@ | grep -q "\-n"
@@ -37,20 +41,31 @@ else
 	nFlag=0
 fi
 
+# If the -n parameter is present - check for N argument
 if [ $nFlag -eq 1 ]; then
 for index in "${!params[@]}"; do
    if [[ "${params[$index]}" = "-n" ]]; then
+	# Updating index to point at next element in array - after -n parameter (should be a number)
         index=$((index+1))
-	echo $index
+	# Storing result in numberOfResults
 	numberOfResults=$(echo ${params[$index]} | grep ^[1-9][0-9]*)
+	# Cleaning up in the parameter array
+	unset params[$index]
+	params=("${params[@]}")
    fi
 done
+
+if [ -z "$numberOfResults" ]; then
+	echo "ERROR: Incorrect or missing argument N to -n parameter"
+	echo ${USAGE}
+	exit 1
+fi
 fi
 
 for param in ${params[@]}
 do
     case $param in
-        -c)
+	-c)
             if [ $numberOfResults -gt 0 ]; then
 		awk '{print $1}' $fileName | sort | uniq -c | sort -k1 -n -r | awk '{print $2 "\t"  $1}' | head -n $numberOfResults
 	    else
@@ -58,10 +73,12 @@ do
 	    fi
 	    exit 0
 	    ;;
-	-n) 
+	-n)
+	    echo "hej"
+	 
             ;;
 	 *)
-            echo "ERROR: Unknown parameter used"
+            echo "ERROR: Unknown parameter $param used"
             echo ${USAGE}
             exit 1
             ;;
