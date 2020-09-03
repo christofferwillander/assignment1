@@ -10,39 +10,38 @@ file=0
 declare -a flags
 index=0
 for arg in $@
-do  
-    if [ -f $arg ]; then
-        file=1
-        filename=$arg
-        echo "file exist"  
-    else
-        flags[$index]=$arg
-        ((index=index+1))
-    fi
-    
-done
-echo ${flags[@]}
-echo ${flags[1]}
-
-#check all flags
-index=0
-for flag in ${flags[@]}
-do
-    
-    printf "%s" $flag | grep -q "N\|\-n"
+do 
+    re='^[0-9]+$'
+    printf "%s" $arg | grep -q "\-n"
     if [ $? -eq 0 ]; then
         #flag N exists
         nFlag=1
-        ((index=index+1))
-        nVal=$(echo ${flags[index]} | grep -o [1-9][0-9]*) 
-        #echo $nVal
-        if [ -z "$nVal" ]; then 	#if the n-flag is not followed by a number
+        #echo $nFlag
+        index=$((index+1))
+        #nVal=$(echo ${flags[index]} | grep -o [1-9][0-9]*)  -z $nVal
+        nVal=$(echo $@ | grep -o [1-9][0-9]*)
+        #echo "n value is $nVal"
+        if [ -z $nVal ]; then     #if the n-flag is not followed by a number
             echo "flag uncomplete"
             exit 1
         fi
+        flags[$index]=$arg
+        index=$((index+1))
+    elif [ -f $arg ]; then
+        file=1
+        filename=$arg
+        #echo "$arg exist"
+    elif ! [[ $arg =~ $re ]]; then
+    #else
+        flags[$index]=$arg
+        index=$((index+1))
     fi
-    ((index=index+1))
+    
 done
+echo "all flags ${flags[@]}"
+echo "nflag is $nFlag"
+echo "nVal is $nVal"
+echo "file is $filename"
 
 #check how many parameters, and if the N flag is there.
 nrOfFlags=index-1
@@ -57,16 +56,40 @@ else
 		exit 1
 	fi
 fi
-
+cat $filename > temp.txt
 for value in ${flags[@]}
 do
     case $value in
         -c)
-            res=$(cat $filename | awk '{print $1}' | sort | uniq -c | sort -k1 -n -r | awk '{print $2 "\t"  $1}')
+            cat temp.txt | awk '{print $1}' | sort | uniq -c | sort -k1 -n -r | awk '{print $2 "\t"  $1}' > test.txt
+            cp test.txt temp.txt
             ;;
         
         -n)
+            cat temp.txt | head -n $nVal > test.txt
+            cp test.txt temp.txt
+
+            ;;
+        -r)
+            cat temp.txt | awk '{print $1 "\t" $9}' | sort -k2 -n -r  > test.txt
+            cp test.txt temp.txt
             
+            ;;
+        -F)
+            cat temp.txt | grep "[4][0-9][0-9]" | awk '{print $1 "\t" $9}' > test.txt
+            cp test.txt temp.txt
+
+            ;;
+        -2)
+            cat temp.txt | grep "2[0-9][0-9]" | awk '{print $1}' | sort | uniq -c | sort -k1 -n -r | awk '{print $2 "\t"  $1}' > test.txt
+            cp test.txt temp.txt
+
+            ;;
+
+        -t)
+            cat temp.txt | awk '{print $1 "\t" $10}' | sort -k2 -r -n > test.txt
+            cp test.txt temp.txt
+
             ;;
         *)
             echo "unkown parameter"
@@ -75,3 +98,4 @@ do
             ;;
     esac
 done
+cat temp.txt
