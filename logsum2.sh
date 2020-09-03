@@ -25,7 +25,7 @@ do
             echo "flag uncomplete"
             exit 1
         fi
-        flags[$index]=$arg
+        #flags[$index]=$arg
         index=$((index+1))
     elif [ -f $arg ]; then
         file=1
@@ -38,10 +38,10 @@ do
     fi
     
 done
-echo "all flags ${flags[@]}"
-echo "nflag is $nFlag"
-echo "nVal is $nVal"
-echo "file is $filename"
+#echo "all flags ${flags[@]}"
+#echo "nflag is $nFlag"
+#echo "nVal is $nVal"
+#echo "file is $filename"
 
 #check how many parameters, and if the N flag is there.
 nrOfFlags=index-1
@@ -56,6 +56,7 @@ else
 		exit 1
 	fi
 fi
+declare -a byteArr
 cat $filename > temp.txt
 for value in ${flags[@]}
 do
@@ -65,30 +66,25 @@ do
             cp test.txt temp.txt
             ;;
         
-        -n)
-            cat temp.txt | head -n $nVal > test.txt
-            cp test.txt temp.txt
-
-            ;;
         -r)
             cat temp.txt | awk '{print $1 "\t" $9}' | sort -k2 -n -r  > test.txt
             cp test.txt temp.txt
             
             ;;
         -F)
-            cat temp.txt | grep "[4][0-9][0-9]" | awk '{print $1 "\t" $9}' > test.txt
+            cat temp.txt | grep "\ [4][0-9][0-9]\ " | awk '{print $1 "\t" $9}' > test.txt
             cp test.txt temp.txt
 
             ;;
         -2)
-            cat temp.txt | grep "2[0-9][0-9]" | awk '{print $1}' | sort | uniq -c | sort -k1 -n -r | awk '{print $2 "\t"  $1}' > test.txt
+            cat temp.txt | grep "\ 2[0-9][0-9]\ " | awk '{print $1}' | sort | uniq -c | sort -k1 -n -r | awk '{print $2 "\t"  $1}' > test.txt
             cp test.txt temp.txt
 
             ;;
 
         -t)
-            cat temp.txt | awk '{print $1 "\t" $10}' | sort -k2 -r -n > test.txt
-            cp test.txt temp.txt
+            cat temp.txt | awk '{print $1 "\t" $10}' | awk '{array[$1]+=$2} END { for (i in array) {print i "\t" array[i]}}' > test.txt
+            cat test.txt | sort -k2 -r -n > temp.txt
 
             ;;
         *)
@@ -98,4 +94,9 @@ do
             ;;
     esac
 done
-cat temp.txt
+
+if [ $nFlag -eq 1 ]; then
+    cat temp.txt | head -n $nVal
+else
+    cat temp.txt
+fi
