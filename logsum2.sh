@@ -2,6 +2,18 @@
 
 USAGE="usage: $0 [-n N] (-c|-2|-r|-F|-t) <filename>"
 
+printResult() {
+if [ $nVal -gt 0 ]; then
+	command=$@
+	command+=" | head -n $nVal"
+	eval $command
+else
+	eval $@
+fi
+exit 0
+}
+
+
 nrOfFlags=0
 nVal=0
 nFlag=0
@@ -62,30 +74,28 @@ for value in ${flags[@]}
 do
     case $value in
         -c)
-            cat temp.txt | awk '{print $1}' | sort | uniq -c | sort -k1 -n -r | awk '{print $2 "\t"  $1}' > test.txt
-            cp test.txt temp.txt
+            var="awk '{print \$1}' $filename | sort | uniq -c | sort -k1 -n -r | awk '{print \$2 \"\t\"  \$1}'"
+            printResult $var
             ;;
         
         -r)
-            cat temp.txt | awk '{print $1 "\t" $9}' | sort -k2 -n -r  > test.txt
-            cp test.txt temp.txt
+            var="awk '{print \$1 \"\t\" \$9}' $filename | sort -k2 -n -r"
+            printResult $var
             
             ;;
         -F)
-            cat temp.txt | grep "\ [4][0-9][0-9]\ " | awk '{print $1 "\t" $9}' > test.txt
-            cp test.txt temp.txt
+            var="grep "\ [4][0-9][0-9]\ " $filename | awk '{print \$1 \"\t\" \$9}'"
+            printResult $var
 
             ;;
         -2)
-            cat temp.txt | grep "\ 2[0-9][0-9]\ " | awk '{print $1}' | sort | uniq -c | sort -k1 -n -r | awk '{print $2 "\t"  $1}' > test.txt
-            cp test.txt temp.txt
-
+            var="grep "\ 2[0-9][0-9]\ " $filename | awk '{print \$1}' | sort | uniq -c | sort -k1 -n -r | awk '{print \$2 \"\t\"  \$1}'"
+            printResult $var
             ;;
 
         -t)
-            cat temp.txt | awk '{print $1 "\t" $10}' | awk '{array[$1]+=$2} END { for (i in array) {print i "\t" array[i]}}' > test.txt
-            cat test.txt | sort -k2 -r -n > temp.txt
-
+            var="awk '{print \$1 \"\t\" \$10}' $filename | awk '{array[\$1]+=\$2} END { for (i in array) {print i \"\t\" array[i]}}' | sort -k2 -r -n"
+            printResult $var
             ;;
         *)
             echo "unkown parameter"
