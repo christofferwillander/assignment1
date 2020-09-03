@@ -1,5 +1,16 @@
 #!/bin/bash
-		
+
+printResult() {
+if [ $numberOfResults -gt 0 ]; then
+	command=$@
+	command+=" | head -n $numberOfResults"
+	eval $command
+else
+	eval $@
+fi
+exit 0
+}
+
 # Showing proper script usage to user
 USAGE="Usage: $0 [-n N] (-c|-2|-r|-F|-t) <filename>"
 
@@ -51,6 +62,7 @@ for index in "${!params[@]}"; do
 	numberOfResults=$(echo ${params[$index]} | grep ^[1-9][0-9]*)
 	# Cleaning up in the parameter array
 	unset params[$index]
+	unset params[$((index-1))]
 	params=("${params[@]}")
    fi
 done
@@ -66,17 +78,9 @@ for param in ${params[@]}
 do
     case $param in
 	-c)
-            if [ $numberOfResults -gt 0 ]; then
-		awk '{print $1}' $fileName | sort | uniq -c | sort -k1 -n -r | awk '{print $2 "\t"  $1}' | head -n $numberOfResults
-	    else
-		awk '{print $1}' $fileName | sort | uniq -c | sort -k1 -n -r | awk '{print $2 "\t"  $1}'
-	    fi
-	    exit 0
+		var="awk '{print \$1}' $fileName | sort | uniq -c | sort -k1 -n -r | awk '{print \$2 \"\t\" \$1}'"
+	 	printResult $var
 	    ;;
-	-n)
-	    echo "hej"
-	 
-            ;;
 	 *)
             echo "ERROR: Unknown parameter $param used"
             echo ${USAGE}
