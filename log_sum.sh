@@ -41,7 +41,7 @@ do
         file=1
         filename=$arg
         #echo "$arg exist"
-    elif ! [[ $arg =~ $re ]]; then
+    elif ! [[ $arg =~ $re ]]; then #if the argument is not a number
     #else
         flags[$index]=$arg
         index=$((index+1))
