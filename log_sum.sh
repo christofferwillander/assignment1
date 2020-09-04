@@ -22,7 +22,7 @@ file=0
 declare -a flags
 index=0
 for arg in $@
-do 
+do
     re='^[0-9]+$'
     printf "%s" $arg | grep -q "\-n"
     if [ $? -eq 0 ]; then
@@ -30,8 +30,8 @@ do
         nFlag=1
         index=$((index+1))
         #nVal=$(echo ${flags[index]} | grep -o [1-9][0-9]*)  -z $nVal
-        nVal=$(echo $@ | grep -o [1-9][0-9]*)
-        if [ -z $nVal ]; then     #if the n-flag is not followed by a number
+        nVal=$(echo $@ | grep -o "^[1-9][0-9]*")
+        if [ -z $nVal ]; then     #if the n-flag is not followed by a number, if nVal is empty
             echo "flag uncomplete"
             exit 1
         fi
@@ -49,6 +49,7 @@ do
     
 done
 
+
 #check how many parameters, and if the N flag is there.
 nrOfFlags=index-1
 if [ $nFlag -ne 0 ]; then
@@ -62,8 +63,7 @@ else
 		exit 1
 	fi
 fi
-declare -a byteArr
-cat $filename > temp.txt
+
 for value in ${flags[@]}
 do
     case $value in
@@ -78,7 +78,7 @@ do
             
             ;;
         -F)
-            var="grep "\ [4][0-9][0-9]\ " $filename | awk '{print \$1 \"\t\" \$9}'"
+            var="grep "\ [4][0-9][0-9]\ " $filename | awk '{print \$9 \"\t\" \$1}'"
             printResult $var
 
             ;;
@@ -98,9 +98,3 @@ do
             ;;
     esac
 done
-
-if [ $nFlag -eq 1 ]; then
-    cat temp.txt | head -n $nVal
-else
-    cat temp.txt
-fi
