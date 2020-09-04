@@ -81,6 +81,23 @@ do
 		var="awk '{print \$1}' $fileName | sort | uniq -c | sort -k1 -n -r | awk '{print \$2 \"\t\" \$1}'"
 	 	printResult $var
 	    ;;
+	-r)
+            var="awk '{print \$1 \"\t\" \$9}' $fileName | sort -k2 -n -r"
+            printResult $var
+	    ;;
+	-F)
+            var="grep "\ [4][0-9][0-9]\ " $fileName | awk '{print \$9 \"\t\" \$1}'"
+            printResult $var
+            ;;
+	-2)
+            var="grep "\ 2[0-9][0-9]\ " $fileName | awk '{print \$1}' | sort | uniq -c | sort -k1 -n -r | awk '{print \$2 \"\t\"  \$1}'"
+            printResult $var
+            ;;
+
+        -t)
+            var="awk '{print \$1 \"\t\" \$10}' $fileName | awk '{array[\$1]+=\$2} END { for (i in array) {print i \"\t\" array[i]}}' | sort -k2 -r -n"
+            printResult $var
+            ;;
 	 *)
             echo "ERROR: Unknown parameter $param used"
             echo ${USAGE}
