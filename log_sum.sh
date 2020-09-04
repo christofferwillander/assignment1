@@ -86,7 +86,7 @@ do
             printResult $var
 	    ;;
 	-F)
-            var="grep '\ [4][0-9][0-9]\ ' $fileName | awk '{print \$9 \"\t\" \$1}'"
+            var="grep '\ [45][0-9][0-9]\ ' $fileName | awk '{print \$9 \"\t\" \$1}' | sort -k1 -n -r"
             printResult $var
             ;;
 	-2)
