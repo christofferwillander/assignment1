@@ -86,11 +86,11 @@ do
             printResult $var
 	    ;;
 	-F)
-            var="grep "\ [4][0-9][0-9]\ " $fileName | awk '{print \$9 \"\t\" \$1}'"
+            var="grep '\ [4][0-9][0-9]\ ' $fileName | awk '{print \$9 \"\t\" \$1}'"
             printResult $var
             ;;
 	-2)
-            var="grep "\ 2[0-9][0-9]\ " $fileName | awk '{print \$1}' | sort | uniq -c | sort -k1 -n -r | awk '{print \$2 \"\t\"  \$1}'"
+            var="grep '\ 2[0-9][0-9]\ ' $fileName | awk '{print \$1}' | sort | uniq -c | sort -k1 -n -r | awk '{print \$2 \"\t\"  \$1}'"
             printResult $var
             ;;
 
