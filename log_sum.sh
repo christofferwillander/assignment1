@@ -1,7 +1,7 @@
 #!/bin/bash
 
 printResult() {
-if [ $numberOfResults -gt 0 ]; then
+if [[ $numberOfResults -gt 0 ]]; then
 	command=$@
 	command+=" | head -n $numberOfResults"
 	eval $command
@@ -10,6 +10,8 @@ else
 fi
 exit 0
 }
+
+echo $#
 
 # Showing proper script usage to user
 USAGE="Usage: $0 [-n N] (-c|-2|-r|-F|-t) <filename>"
@@ -45,11 +47,23 @@ params=("${params[@]}")
 # Checking whether -n flag is used
 printf "%s" $@ | grep -q "\-n"
 if [ $? -eq 0 ]; then
-	echo "Parameter -n is present"
 	nFlag=1
 else
-	echo "Parameter -n is not present"
 	nFlag=0
+fi
+
+# Checking whether -e flag is used
+printf "%s" $@ | grep -q "\-e"
+if [ $? -eq 0 ]; then
+	eFlag=1
+
+	# Cleaning up in the parameter array
+	index=$#
+	index=$((index-2))
+	unset params[$index]
+	params=("${params[@]}")
+else
+	eFlag=0
 fi
 
 # If the -n parameter is present - check for N argument
@@ -72,6 +86,12 @@ if [ -z "$numberOfResults" ]; then
 	echo ${USAGE}
 	exit 1
 fi
+fi
+
+if [[ $nFlag -eq 1 && $# -lt 4  ]] || [[ $eFlag -eq 1 && $# -lt 3  ]] || [ $# -eq 1 ]; then
+	echo "ERROR: Incorrect number of parameters used"
+	echo ${USAGE}
+	exit 1
 fi
 
 for param in ${params[@]}
