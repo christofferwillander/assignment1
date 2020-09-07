@@ -12,7 +12,7 @@ exit 0
 }
 
 # Showing proper script usage to user
-USAGE="Usage: $0 [-n N] (-c|-2|-r|-F|-t) <filename>"
+USAGE="Usage: $0 [-n N] (-c|-2|-r|-F|-t) [-e] <filename>"
 
 if [ $# -lt 1 ] || [ $# -gt 5 ]; then
 	echo $USAGE
