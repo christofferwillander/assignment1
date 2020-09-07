@@ -6,14 +6,21 @@ blacklistCheck() {
 
 	if [[ $? -eq 1 ]]; then
 		echo "ERROR: Blacklist file $blacklistFile does not exist"
-		rm blacklistComparison
+		rm blacklistComparison.txt
 		exit 1
 	else
-		dig -f $blacklistFile +short > resolved
-		
-		cat blacklistComparison
-		rm resolved
-		rm blacklistComparison
+		dig -f $blacklistFile +short > resolved.txt
+		while IFS= read -r line
+		do
+  			curIP=$(echo "$line" | grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}")
+			grep -F -q "$curIP" resolved.txt
+			if [[ $? -eq 0 ]]; then
+				echo "$line *Blacklisted!*"
+			else
+				echo "$line"
+			fi  
+		done < blacklistComparison.txt
+		rm blacklistComparison.txt resolved.txt
 	fi
 }
 
@@ -25,11 +32,11 @@ if [[ $numberOfResults -gt 0 && $eFlag -eq 0 ]]; then
 elif [[ $eFlag -eq 0 ]]; then
 	eval $command
 elif [[ $eFlag -eq 1 && $numberOfResults -eq 0 ]]; then
-	command+=" > blacklistComparison"
+	command+=" > blacklistComparison.txt"
 	eval $command
 	blacklistCheck
 elif  [[ $eFlag -eq 1 && $numberOfResults -gt 0 ]]; then
-	command+=" | head -n $numberOfResults > blacklistComparison"
+	command+=" | head -n $numberOfResults > blacklistComparison.txt"
 	eval $command
 	blacklistCheck
 fi
