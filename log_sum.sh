@@ -11,12 +11,10 @@ fi
 exit 0
 }
 
-echo $#
-
 # Showing proper script usage to user
 USAGE="Usage: $0 [-n N] (-c|-2|-r|-F|-t) <filename>"
 
-if [ $# -lt 1 ] || [ $# -gt 4 ]; then
+if [ $# -lt 1 ] || [ $# -gt 5 ]; then
 	echo $USAGE
 	exit 1
 fi
@@ -88,7 +86,8 @@ if [ -z "$numberOfResults" ]; then
 fi
 fi
 
-if [[ $nFlag -eq 1 && $# -lt 4  ]] || [[ $eFlag -eq 1 && $# -lt 3  ]] || [ $# -eq 1 ]; then
+# Check for number of parameters - taking into considerations which flags are being used
+if [[ $nFlag -eq 1 && $# -lt 4  ]] || [[ $eFlag -eq 1 && $# -lt 3  ]] || [[ $eFlag -eq 1 && $nFlag -eq 1 && $# -lt 5  ]] ||  [ $# -eq 1 ]; then
 	echo "ERROR: Incorrect number of parameters used"
 	echo ${USAGE}
 	exit 1
