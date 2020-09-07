@@ -1,40 +1,53 @@
 #!/bin/bash
 
 blacklistCheck() {
+	# Checking if DNS blacklist file exists
 	blacklistFile="dns.blacklist.txt"
 	test -f $blacklistFile
-
+	
+	# If DNS blacklist file does not exist - terminate, check for matches in resolved IP list
 	if [[ $? -eq 1 ]]; then
 		echo "ERROR: Blacklist file $blacklistFile does not exist"
 		rm blacklistComparison.txt
 		exit 1
 	else
+		# Resolve IP addresses for domain names in DNS blacklist - save in resolved.txt
 		dig -f $blacklistFile +short > resolved.txt
+		
+		# Iterate through blacklistComparison.txt - check for matches (compare with resolved.txt)
 		while IFS= read -r line
 		do
   			curIP=$(echo "$line" | grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}")
 			grep -F -q "$curIP" resolved.txt
+			
+			# If match was found (blacklisted IP) - print line with *Blacklisted!*, else print line as is
 			if [[ $? -eq 0 ]]; then
 				echo "$line *Blacklisted!*"
 			else
 				echo "$line"
 			fi  
 		done < blacklistComparison.txt
+
+		# Clean-up
 		rm blacklistComparison.txt resolved.txt
 	fi
 }
 
 printResult() {
 command=$@
+# If -n flag is set & -e flag is not set
 if [[ $numberOfResults -gt 0 && $eFlag -eq 0 ]]; then
 	command+=" | head -n $numberOfResults"
 	eval $command
+# If -n & -e flag is not set
 elif [[ $eFlag -eq 0 ]]; then
 	eval $command
+# If -n flag is not set & -e flag is set
 elif [[ $eFlag -eq 1 && $numberOfResults -eq 0 ]]; then
 	command+=" > blacklistComparison.txt"
 	eval $command
 	blacklistCheck
+# If -n & -e flag is set
 elif  [[ $eFlag -eq 1 && $numberOfResults -gt 0 ]]; then
 	command+=" | head -n $numberOfResults > blacklistComparison.txt"
 	eval $command
@@ -126,6 +139,7 @@ if [[ $nFlag -eq 1 && $# -lt 4  ]] || [[ $eFlag -eq 1 && $# -lt 3  ]] || [[ $eFl
 	exit 1
 fi
 
+# Iterating through flags - applying switch-case based on flag
 for param in ${params[@]}
 do
     case $param in
