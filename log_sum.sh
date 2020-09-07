@@ -3,12 +3,14 @@ blacklistPrint()
 {
 	dig -f dns.blacklist.txt +short > dnsFile.txt
 	grep -f dnsFile.txt blacklistCheck > tempIP
+
 	#make conditions, if -F or -r flag exist, the IP address will be placed in the second column.
 	if [ $oddFlag -eq 1 ]; then
 		join blacklistCheck tempIP | awk '{ if (($2==$3)) printf("%s\t %s\t %s\n", $1, $2, "*blacklisteed*"); else printf("%s\t %s\n", $1, $2) }' > reslutFile
 	else
 		join blacklistCheck tempIP | awk '{ if (($1==$3)) printf("%s\t %s\t %s\n", $1, $2, "*blacklisteed*"); else printf("%s\t %s\n", $1, $2) }' > reslutFile
 	fi
+
 	cat reslutFile
 	rm dnsFile.txt
 	rm tempIP
@@ -17,27 +19,29 @@ blacklistPrint()
 }
 
 
-printResult() {
-if [[ $numberOfResults -gt 0 ]]; then
+printResult()
+{
 	command=$@
-	if [ $eFlag -eq 1 ]; then
-		#resolve domain addresses.
-		command+=" | head -n $numberOfResults"
+	if [[ $numberOfResults -gt 0 ]]; then
+		if [ $eFlag -eq 1 ]; then
+			#resolve domain addresses.
+			command+=" | head -n $numberOfResults"
+			eval $command > blacklistCheck
+			blacklistPrint $command
+
+		else
+			command+=" | head -n $numberOfResults"
+			eval $command
+		fi
+	elif [ $eFlag -eq 1 ]; then
+		#resolve addresses
+		echo "haaaaaaj"
 		eval $command > blacklistCheck
 		blacklistPrint $command
-
 	else
-		command+=" | head -n $numberOfResults"
-		eval $command
+		eval $@
 	fi
-elif [ $eFlag -eq 1 ]; then
-	#resolve addresses
-	eval $command >blacklistCheck
-	blacklistPrint $command
-else
-	eval $@
-fi
-exit 0
+	exit 0
 }
 
 # Showing proper script usage to user
@@ -140,7 +144,7 @@ do
 	 	printResult $var
 	    ;;
 	-r)
-            var="awk '{print \$1 \"\t\" \$9}' $fileName | sort -k2 -n -r"
+            var="awk '{print \$9 \"\t\" \$1}' $fileName | sort -k2 -n -r"
             printResult $var
 	    ;;
 	-F)
