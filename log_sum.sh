@@ -5,19 +5,19 @@ blacklistPrint()
 	grep -f dnsFile.txt blacklistCheck > tempIP
 
 	#make conditions, if -F or -r flag exist, the IP address will be placed in the second column.
-	if [ $oddFlag -eq 1 ]; then
-		join blacklistCheck tempIP | awk '{ if (($2==$3)) printf("%s\t %s\t %s\n", $1, $2, "*blacklisteed*"); else printf("%s\t %s\n", $1, $2) }' > reslutFile
-	else
-		join blacklistCheck tempIP | awk '{ if (($1==$3)) printf("%s\t %s\t %s\n", $1, $2, "*blacklisteed*"); else printf("%s\t %s\n", $1, $2) }' > reslutFile
+	if [ $? -eq 0 ] && [ $oddFlag -eq 1 ]; then
+		join blacklistCheck tempIP | awk '{ if (($2==$3)) printf("%s\t %s\t %s\n", $1, $2, "*blacklisteed*"); else printf("%s\t %s\n", $1, $2) }'
+	elif [ $? -eq 0 ]; then
+		join blacklistCheck tempIP | awk '{ if (($1==$3)) printf("%s\t %s\t %s\n", $1, $2, "*blacklisteed*"); else printf("%s\t %s\n", $1, $2) }'
+	else #if there were no matches
+		cat blacklistCheck
 	fi
 
-	cat reslutFile
 	rm dnsFile.txt
 	rm tempIP
 	rm blacklistCheck
-	rm reslutFile
-}
 
+}
 
 printResult()
 {
