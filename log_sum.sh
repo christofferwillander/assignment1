@@ -1,15 +1,41 @@
 #!/bin/bash
 
+blacklistCheck() {
+	blacklistFile="dns.blacklist.txt"
+	test -f $blacklistFile
+
+	if [[ $? -eq 1 ]]; then
+		echo "ERROR: Blacklist file $blacklistFile does not exist"
+		rm blacklistComparison
+		exit 1
+	else
+		dig -f $blacklistFile +short > resolved
+		
+		cat blacklistComparison
+		rm resolved
+		rm blacklistComparison
+	fi
+}
+
 printResult() {
-if [[ $numberOfResults -gt 0 ]]; then
-	command=$@
+command=$@
+if [[ $numberOfResults -gt 0 && $eFlag -eq 0 ]]; then
 	command+=" | head -n $numberOfResults"
 	eval $command
-else
-	eval $@
+elif [[ $eFlag -eq 0 ]]; then
+	eval $command
+elif [[ $eFlag -eq 1 && $numberOfResults -eq 0 ]]; then
+	command+=" > blacklistComparison"
+	eval $command
+	blacklistCheck
+elif  [[ $eFlag -eq 1 && $numberOfResults -gt 0 ]]; then
+	command+=" | head -n $numberOfResults > blacklistComparison"
+	eval $command
+	blacklistCheck
 fi
 exit 0
 }
+
 
 # Showing proper script usage to user
 USAGE="Usage: $0 [-n N] (-c|-2|-r|-F|-t) [-e] <filename>"
