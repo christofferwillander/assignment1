@@ -96,18 +96,18 @@ else
 	nFlag=0
 fi
 
-# Checking whether -e flag is used
+# Checking whether -e flag is used (iterating through entire params array - i.e. the e parameter does not have to be specified in any specific order)
 printf "%s" $@ | grep -q "\-e"
 if [ $? -eq 0 ]; then
-	eFlag=1
+for index in "${!params[@]}"; do
+	if [ "${params[$index]}" = "-e" ]; then
+		eFlag=1
 
-	# Cleaning up in the parameter array
-	index=$#
-	index=$((index-2))
-	unset params[$index]
-	params=("${params[@]}")
-else
-	eFlag=0
+		# Cleaning up in the parameter array
+		unset params[$index]
+		params=("${params[@]}")
+	fi
+done
 fi
 
 # If the -n parameter is present - check for N argument
@@ -143,28 +143,28 @@ fi
 for param in ${params[@]}
 do
     case $param in
-	-c)
+	-c) # Counting connection attempts per IP (sorting in descending order)
 		var="awk '{print \$1}' $fileName | sort | uniq -c | sort -k1 -n -r | awk '{print \$2 \"\t\" \$1}'"
 	 	printResult $var
 	    ;;
-	-r)
+	-r) # Most common result codes (descending order)
             var="awk '{print \$1 \"\t\" \$9}' $fileName | sort -k2 -n -r"
             printResult $var
 	    ;;
-	-F)
+	-F) # Most common result comes that indicate failure (descending order)
             var="grep '\ [45][0-9][0-9]\ ' $fileName | awk '{print \$9 \"\t\" \$1}' | sort -k1 -n -r"
             printResult $var
             ;;
-	-2)
+	-2) # IP addresses which makes the most successful connection attempts (descending order)
             var="grep '\ 2[0-9][0-9]\ ' $fileName | awk '{print \$1}' | sort | uniq -c | sort -k1 -n -r | awk '{print \$2 \"\t\"  \$1}'"
             printResult $var
             ;;
 
-        -t)
+        -t) # Counting number of bytes per IP (descending order)
             var="awk '{print \$1 \"\t\" \$10}' $fileName | awk '{array[\$1]+=\$2} END { for (i in array) {print i \"\t\" array[i]}}' | sort -k2 -r -n"
             printResult $var
             ;;
-	 *)
+	 *) # Unknown parameter
             echo "ERROR: Unknown parameter $param used"
             echo ${USAGE}
             exit 1
