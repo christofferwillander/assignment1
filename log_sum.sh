@@ -1,5 +1,18 @@
 #!/bin/bash
 
+checkNumOfFuncParams() {
+	# Removing current function flag from parameter array
+	unset params[0]
+        params=("${params[@]}")
+	
+	# Checking if there are still function flags left in parameter array (if so - print first flag in error message and exit)
+	if [[ ${#params[@]} -gt 0 ]]; then
+		echo "ERROR: Too many function parameters set, $cmd cannot be combined with ${params[0]}"
+		echo ${USAGE}
+		exit 1 
+	fi
+}
+
 blacklistCheck() {
 	# Checking if DNS blacklist file exists
 	blacklistFile="dns.blacklist.txt"
@@ -144,23 +157,33 @@ for param in ${params[@]}
 do
     case $param in
 	-c) # Counting connection attempts per IP (sorting in descending order)
-		var="awk '{print \$1}' $fileName | sort | uniq -c | sort -k1 -n -r | awk '{print \$2 \"\t\" \$1}'"
-	 	printResult $var
+	    cmd="-c"
+	    checkNumOfFuncParams $cmd
+	    var="awk '{print \$1}' $fileName | sort | uniq -c | sort -k1 -n -r | awk '{print \$2 \"\t\" \$1}'"
+	    printResult $var
 	    ;;
 	-r) # Most common result codes (descending order)
+	    cmd="-r"
+	    checkNumOfFuncParams $cmd
             var="awk '{print \$1 \"\t\" \$9}' $fileName | sort -k2 -n -r"
             printResult $var
 	    ;;
 	-F) # Most common result comes that indicate failure (descending order)
-            var="grep '\ [45][0-9][0-9]\ ' $fileName | awk '{print \$9 \"\t\" \$1}' | sort -k1 -n -r"
+            cmd="-F"
+	    checkNumOfFuncParams $cmd
+	    var="grep '\ [45][0-9][0-9]\ ' $fileName | awk '{print \$9 \"\t\" \$1}' | sort -k1 -n -r"
             printResult $var
             ;;
 	-2) # IP addresses which makes the most successful connection attempts (descending order)
+	    cmd="-2"
+	    checkNumOfFuncParams $cmd
             var="grep '\ 2[0-9][0-9]\ ' $fileName | awk '{print \$1}' | sort | uniq -c | sort -k1 -n -r | awk '{print \$2 \"\t\"  \$1}'"
             printResult $var
             ;;
 
         -t) # Counting number of bytes per IP (descending order)
+	    cmd="-t"
+            checkNumOfFuncParams $cmd
             var="awk '{print \$1 \"\t\" \$10}' $fileName | awk '{array[\$1]+=\$2} END { for (i in array) {print i \"\t\" array[i]}}' | sort -k2 -r -n"
             printResult $var
             ;;
