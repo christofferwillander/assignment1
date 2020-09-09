@@ -5,9 +5,14 @@ checkNumOfFuncParams() {
 	unset params[0]
         params=("${params[@]}")
 	
-	# Checking if there are still function flags left in parameter array (if so - print first flag in error message and exit)
-	if [[ ${#params[@]} -gt 0 ]]; then
-		echo "ERROR: Too many function parameters set, $cmd cannot be combined with ${params[0]}"
+	# Checking if function parameter is repeated more than once (if so - print error message and exit)
+	if [[ "$1" = "${params[0]}" ]]; then
+		echo "ERROR: Too many function parameters set, command $1 is repeated more than once"
+		echo ${USAGE}
+		exit 1
+	# Checking if there are still function flags left in parameter array (if so - print error message and exit)
+	elif [[ ${#params[@]} -gt 0 ]]; then
+		echo "ERROR: Too many function parameters set, $1 cannot be combined with ${params[0]}"
 		echo ${USAGE}
 		exit 1 
 	fi
