@@ -1,5 +1,43 @@
 #!/bin/bash
 
+errorCodesSpecialCase() {
+	command=$@
+	command+=" > specialCase.txt"
+	eval $command
+
+	ctr=0
+	curErrorCode=$(awk '{print $1}' specialCase.txt | head -n 1 | grep -Eo "[0-9]{3}")
+
+        while IFS= read -r line
+        	do
+        		nextErrorCode=$(echo $line | awk '{print $1}' | grep -Eo "[0-9]{3}")
+			if [[ $ctr -lt $numberOfResults && $curErrorCode == $nextErrorCode  ]]; then
+				ctr=$((ctr+1))
+				curErrorCode=$nextErrorCode
+
+				if [[ eFlag -eq 0 ]]; then
+					echo $line
+				else
+					echo $line >> blacklistComparison.txt
+				fi
+			elif [[ $nextErrorCode != $curErrorCode ]]; then
+				ctr=1
+				curErrorCode=$nextErrorCode
+				
+				if [[ eFlag -eq 0 ]]; then
+                                        echo $line
+                                else
+                                        echo $line >> blacklistComparison.txt
+                                fi
+			fi
+        done < specialCase.txt
+	
+	if [[ eFlag -eq 1 ]]; then
+		blacklistCheck
+	fi
+	rm specialCase.txt	
+}
+
 checkNumOfFuncParams() {
 	# Removing current function flag from parameter array
 	unset params[0]
@@ -53,6 +91,8 @@ blacklistCheck() {
 
 printResult() {
 command=$@
+
+
 # If -n flag is set & -e flag is not set
 if [[ $numberOfResults -gt 0 && $eFlag -eq 0 ]]; then
 	command+=" | head -n $numberOfResults"
@@ -170,14 +210,24 @@ do
 	-r) # Most common result codes (descending order)
 	    cmd="-r"
 	    checkNumOfFuncParams $cmd
-            var="awk '{print \$1 \"\t\" \$9}' $fileName | sort -k2 -n -r"
-            printResult $var
+            var="awk '{print \$1 \"\t\" \$9}' $fileName | sort -k2 -n | uniq -c | sort -k3 -k1 -n -r | awk '{print \$3 \"\t\" \$2}'"
+            
+            if [[ nFlag -eq 0 ]]; then
+                printResult $var
+            else
+                errorCodesSpecialCase $var
+            fi
 	    ;;
-	-F) # Most common result comes that indicate failure (descending order)
+	-F) # Most common result codes that indicate failure (descending order)
             cmd="-F"
 	    checkNumOfFuncParams $cmd
-	    var="grep '\ [45][0-9][0-9]\ ' $fileName | awk '{print \$9 \"\t\" \$1}' | sort -k1 -n -r"
-            printResult $var
+	    var="grep '\ [45][0-9][0-9]\ ' $fileName | awk '{print \$9 \"\t\" \$1}' | sort -k2 -n | uniq -c | sort -k2 -k1 -n -r | awk '{print \$2 \"\t\" \$3}'"
+            
+	    if [[ nFlag -eq 0 ]]; then
+	    	printResult $var
+	    else
+		errorCodesSpecialCase $var
+	    fi
             ;;
 	-2) # IP addresses which makes the most successful connection attempts (descending order)
 	    cmd="-2"
