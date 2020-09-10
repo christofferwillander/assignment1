@@ -1,29 +1,43 @@
 #!/bin/bash
 
+# Special case for -F and -r flags (when -n parameter is set in order to limit amount of rows per error code group)
 errorCodesSpecialCase() {
+	# Redirecting command output to temporary file for further processing
 	command=$@
 	command+=" > specialCase.txt"
 	eval $command
-
+	
+	# Counter variable for counting number of occurences per error code
 	ctr=0
+	
+	# Extracting first row in temporary file as start value
 	curErrorCode=$(awk '{print $1}' specialCase.txt | head -n 1 | grep -Eo "[0-9]{3}")
-
+	
+	# Iterating through temporary file - row by row
         while IFS= read -r line
         	do
+			# Extracting next error code (error code on current line)
         		nextErrorCode=$(echo $line | awk '{print $1}' | grep -Eo "[0-9]{3}")
+			# If counter is less than argument to -n flag & current and next error codes are same
 			if [[ $ctr -lt $numberOfResults && $curErrorCode == $nextErrorCode  ]]; then
+				# Increment occurence counter
 				ctr=$((ctr+1))
+				
+				# Update current error code
 				curErrorCode=$nextErrorCode
-
+				
+				# If -e flag is not set: echo line, otherwise redirect to blacklistComparison file
 				if [[ eFlag -eq 0 ]]; then
 					echo $line
 				else
 					echo $line >> blacklistComparison.txt
 				fi
+			# If next error code is different than current one
 			elif [[ $nextErrorCode != $curErrorCode ]]; then
 				ctr=1
 				curErrorCode=$nextErrorCode
-				
+
+				# If -e flag is not set: echo line, otherwise redirect to blacklistComparison file
 				if [[ eFlag -eq 0 ]]; then
                                         echo $line
                                 else
@@ -32,9 +46,12 @@ errorCodesSpecialCase() {
 			fi
         done < specialCase.txt
 	
+	# If -e flag is set, perform blacklist check	
 	if [[ eFlag -eq 1 ]]; then
 		blacklistCheck
 	fi
+	
+	# Clean-up
 	rm specialCase.txt	
 }
 
@@ -207,22 +224,24 @@ do
 	    var="awk '{print \$1}' $fileName | sort | uniq -c | sort -k1 -n -r | awk '{print \$2 \"\t\" \$1}'"
 	    printResult $var
 	    ;;
-	-r) # Most common result codes (descending order)
+	-r) # Most common result codes (sorting on number of occurences per IP and result code group - descending order)
 	    cmd="-r"
 	    checkNumOfFuncParams $cmd
             var="awk '{print \$1 \"\t\" \$9}' $fileName | sort -k2 -n | uniq -c | sort -k3 -k1 -n -r | awk '{print \$3 \"\t\" \$2}'"
             
+	    # If -n flag is not set: print result, otherwise go to special case function
             if [[ nFlag -eq 0 ]]; then
                 printResult $var
             else
                 errorCodesSpecialCase $var
             fi
 	    ;;
-	-F) # Most common result codes that indicate failure (descending order)
+	-F) # Most common result codes that indicate failure (sorting on number of occurences per IP and error code group - descending order)
             cmd="-F"
 	    checkNumOfFuncParams $cmd
 	    var="grep '\ [45][0-9][0-9]\ ' $fileName | awk '{print \$9 \"\t\" \$1}' | sort -k2 -n | uniq -c | sort -k2 -k1 -n -r | awk '{print \$2 \"\t\" \$3}'"
             
+	    # If -n flag is not set: print result, otherwise go to special case function
 	    if [[ nFlag -eq 0 ]]; then
 	    	printResult $var
 	    else
