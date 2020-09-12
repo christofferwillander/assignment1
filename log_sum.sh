@@ -174,37 +174,37 @@ fi
 # Checking whether -e flag is used (iterating through entire params array - i.e. the e parameter does not have to be specified in any specific order)
 printf "%s" $@ | grep -q "\-e"
 if [ $? -eq 0 ]; then
-for index in "${!params[@]}"; do
-	if [ "${params[$index]}" = "-e" ]; then
-		eFlag=1
+	for index in "${!params[@]}"; do
+		if [ "${params[$index]}" = "-e" ]; then
+			eFlag=1
 
-		# Cleaning up in the parameter array
-		unset params[$index]
-		params=("${params[@]}")
-	fi
-done
+			# Cleaning up in the parameter array
+			unset params[$index]
+			params=("${params[@]}")
+		fi
+	done
 fi
 
 # If the -n parameter is present - check for N argument
 if [ $nFlag -eq 1 ]; then
-for index in "${!params[@]}"; do
-   if [[ "${params[$index]}" = "-n" ]]; then
-	# Updating index to point at next element in array - after -n parameter (should be a number)
-        index=$((index+1))
-	# Storing result in numberOfResults
-	numberOfResults=$(echo ${params[$index]} | grep ^[1-9][0-9]*)
-	# Cleaning up in the parameter array
-	unset params[$index]
-	unset params[$((index-1))]
-	params=("${params[@]}")
-   fi
-done
+	for index in "${!params[@]}"; do
+	   if [[ "${params[$index]}" = "-n" ]]; then
+		# Updating index to point at next element in array - after -n parameter (should be a number)
+		index=$((index+1))
+		# Storing result in numberOfResults
+		numberOfResults=$(echo ${params[$index]} | grep ^[1-9][0-9]*)
+		# Cleaning up in the parameter array
+		unset params[$index]
+		unset params[$((index-1))]
+		params=("${params[@]}")
+	   fi
+	done
 
-if [ -z "$numberOfResults" ]; then
-	echo "ERROR: Incorrect or missing argument N to -n parameter"
-	echo ${USAGE}
-	exit 1
-fi
+	if [ -z "$numberOfResults" ]; then
+		echo "ERROR: Incorrect or missing argument N to -n parameter"
+		echo ${USAGE}
+		exit 1
+	fi
 fi
 
 # Check for number of parameters - taking into considerations which flags are being used
