@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Special case for -F and -r flags (when -n parameter is set in order to limit amount of rows per error code group)
-errorCodesSpecialCase() {
+# Special case for -F and -r flags (when -n parameter is set in order to limit amount of rows per result code group)
+resultCodesSpecialCase() {
 	# Redirecting command output to temporary file for further processing
 	command=$@
 	command+=" > specialCase.txt"
@@ -233,7 +233,7 @@ do
             if [[ nFlag -eq 0 ]]; then
                 printResult $var
             else
-                errorCodesSpecialCase $var
+                resultCodesSpecialCase $var
             fi
 	    ;;
 	-F) # Most common result codes that indicate failure (sorting on number of occurences per IP and error code group - descending order)
@@ -245,7 +245,7 @@ do
 	    if [[ nFlag -eq 0 ]]; then
 	    	printResult $var
 	    else
-		errorCodesSpecialCase $var
+		resultCodesSpecialCase $var
 	    fi
             ;;
 	-2) # IP addresses which makes the most successful connection attempts (descending order)
